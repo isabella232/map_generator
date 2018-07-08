@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Map Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Open Sans", "Segoe UI", sans-serif;
+            font-size: 14px;
+            background-color: hsl(60, 10%, 80%);
+            border: 1px solid hsl(60, 20%, 60%);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        main {
+            flex: auto;
+            display: flex;
+            flex-direction: row;
+        }
+
+        footer {
+            flex: initial;
+            height: 0;
+        }
+
+        #ui {
+            display: flex;
+            flex-direction: column;
+            flex: initial;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5em;
+            width: 200px;
+        }
+
+        label {
+            white-space: nowrap;
+        }
+
+        .row {
+            flex: initial;
+            justify-content: space-evenly;
+        }
+
+        .row > * {
+            display: block;
+        }
+
+        #group-sliders label, #group-region-count label {
+            font-size: 80%;
+        }
+
+        #group-sliders > label > span:first-child {
+            display: inline-block;
+            width: 3rem;
+            text-align: right;
+        }
+
+        #output {
+            background-color: #44447a;
+            border-right: 1px solid hsl(60, 20%, 60%);
+            border-bottom: 1px solid hsl(60, 20%, 60%);
+            display: flex;
+            flex: auto;
+            justify-content: space-evenly;
+            position: relative;
+        }
+
+        #map {
+            background-color: hsla(240, 20%, 90%, 0.5);
+        }
+
+        input[type='range'] {
+            width: 80px;
+            cursor: ew-resize;
+        }
+
+        .clickable-labels label {
+            cursor: pointer;
+        }
+
+        label:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+    <style id="holderjs-style" type="text/css"></style>
+</head>
+
+<body class=" __plain_text_READY__">
+<main>
+    <div id="output">
+        <canvas id="map" style="width: 512px; height: 512px; background: black;" width="512" height="512">
+            Canvas not supported
+        </canvas>
+    </div>
+
+    <div id="ui">
+        <div class="row">
+            <div>
+                <label>
+                    Seed:
+                    <input id="seed" type="number" min="0" placeholder="number" style="width:5em">
+                </label>
+                <button onclick="prevSeed();event.preventDefault()" ontouchmove="prevSeed();event.preventDefault()">
+                    -
+                </button>
+                <button onclick="nextSeed();event.preventDefault()" ontouchmove="nextSeed();event.preventDefault()">
+                    +
+                </button>
+            </div>
+            <div>
+                <label>
+                    Variant:
+                    <input id="variant" type="number" min="0" max="9" style="width:3em">
+                </label>
+                <button onclick="prevVariant();event.preventDefault()" ontouchmove="prevVariant();event.preventDefault()">
+                    -
+                </button>
+                <button onclick="nextVariant();event.preventDefault()" ontouchmove="nextVariant();event.preventDefault()">
+                    +
+                </button>
+            </div>
+            <div>
+                <label>
+                    Rivers:
+                    <input id="rivers" type="number" min="0" max="9" style="width:3em">
+                </label>
+                <button onclick="prevRivers();event.preventDefault()" ontouchmove="prevRivers();event.preventDefault()">
+                    -
+                </button>
+                <button onclick="nextRivers();event.preventDefault()" ontouchmove="nextRivers();event.preventDefault()">
+                    +
+                </button>
+            </div>
+        </div>
+
+        <div id="group-sliders" class="row">
+            <label id="label-rainfall">
+                <span>Dry</span>
+                <input type="range" id="rainfall" list="tickmarks" min="-1" max="1" step="0.05">
+                <span>Wet</span>
+            </label>
+
+            <label id="label-northTemperature">
+                <span>N-Cold</span>
+                <input type="range" id="northTemperature" list="tickmarks" min="-1.5" max="1.5" step="0.05">
+                <span>N-Hot</span>
+            </label>
+
+            <label id="label-southTemperature">
+                <span>S-Cold</span>
+                <input type="range" id="southTemperature" list="tickmarks" min="-1.5" max="1.5" step="0.05">
+                <span>S-Hot</span>
+            </label>
+
+            <label id="label-persistence"><span>Jagged</span>
+                <input type="range" id="persistence" list="tickmarks" min="-1" max="1" step="0.05">
+                <span>Smooth</span>
+            </label>
+        </div>
+
+        <div id="group-region-count" class="row clickable-labels">
+            <span>Number of regions:</span>
+            <label><input type="radio" id="size-tiny" name="size" value="tiny"> tiny</label>
+            <label><input type="radio" id="size-small" name="size" value="small"> small</label>
+            <label><input type="radio" id="size-medium" name="size" value="medium"> medium</label>
+            <label><input type="radio" id="size-large" name="size" value="large"> large</label>
+            <label><input type="radio" id="size-huge" name="size" value="huge"> huge</label>
+            <!-- <label><input type="radio" id="size-ginormous" name="size" value="ginormous"> ginormous</label> -->
+        </div>
+
+        <div class="row clickable-labels">
+            <span>Rendering:</span>
+            <label><input type="checkbox" id="noisyEdges"> noisy edges</label>
+            <label><input type="checkbox" id="noisyFills"> noisy fills</label>
+            <label><input type="checkbox" id="icons"> icons</label>
+            <label><input type="checkbox" id="biomes"> biomes</label>
+            <label><input type="checkbox" id="lighting"> lighting</label>
+            <span>Right click to save image</span>
+        </div>
+    </div>
+    <script src="/main.bundle.js"></script>
+    <datalist id="tickmarks">
+        <option value="-0.5">
+        </option>
+        <option value="0">
+        </option>
+        <option value="0.5">
+        </option>
+    </datalist>
+</main>
+</body>
+</html>
